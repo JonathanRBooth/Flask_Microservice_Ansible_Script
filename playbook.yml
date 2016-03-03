@@ -1,0 +1,21 @@
+---
+- hosts: 127.0.0.1
+  become: True
+  vars_files:
+    - vars/all.yml
+  roles:  
+    - aws
+
+- hosts: web2
+  become: True
+  vars_files:
+    - vars/all.yml
+  roles:  
+    - server
+    - flask
+    - apache
+    - elb
+
+  environment:
+    SS_USE_WATCHTOWER_LOGGER: True
+    SS_USE_FILE_LOGGER: True

@@ -1,0 +1,10 @@
+---
+- name: Update apt
+  apt: update_cache=yes
+
+- name: Install Packages
+  apt: pkg={{item}} state=installed
+  with_items:
+   - libapache2-mod-wsgi-py3
+   - apache2
+   - python3-pip

@@ -1,0 +1,41 @@
+- name: Copy requirements.txt over to host
+  copy: src=requirements.txt dest=/var/www/ mode=0644
+
+- name: Pip Installs
+  command: pip3 install -r /var/www/requirements.txt 
+
+- name: Set Environment Variables for WatchTower Logging
+  lineinfile: dest=/etc/environment state=present line='SS_USE_WATCHTOWER_LOGGER=True'
+
+- name: Set Environment Variables for Local Logging
+  lineinfile: dest=/etc/environment state=present line='SS_USE_FILE_LOGGER=True'
+  
+- name: Set Environment AWS Variables (1)
+  lineinfile: dest=/etc/environment state=present line='AWS_DEFAULT_REGION={{region}}'
+  
+- name: Set Environment AWS Variables (2)
+  lineinfile: dest=/etc/environment state=present line='AWS_SECRET_ACCESS_KEY={{aws_secret_key}}'
+  
+- name: Set Environment AWS Variables (3)
+  lineinfile: dest=/etc/environment state=present line='AWS_ACCESS_KEY_ID={{aws_access_key}}'
+  
+- name: Make temp directory
+  file: path=/var/www/temp state=directory mode=0755
+
+- name: Make SSApp directory
+  file: path=/var/www/SSApp state=directory mode=0755
+
+- name: Get App Files
+  command: aws s3 cp s3://storageservice-builds/{{build_s3_filename}} /var/www/temp/  
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ aws_access_key }}"
+    AWS_SECRET_ACCESS_KEY: "{{ aws_secret_key }}"
+    AWS_DEFAULT_REGION: "{{ region }}"
+
+- name: Unpack deployment files
+  unarchive: src=/var/www/temp/{{build_s3_filename}} dest=/var/www/SSApp/ copy=no
+
+- shell: ls /var/www/SSApp/
+  register: result  
+
+- set_fact: app_version={{result.stdout_lines[0]}} # sets variable app_version for App.conf template

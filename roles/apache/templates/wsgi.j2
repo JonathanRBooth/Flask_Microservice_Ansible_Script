@@ -1,0 +1,38 @@
+#!/usr/bin/python3
+import sys
+import logging
+import os
+
+logging.basicConfig(stream=sys.stderr)
+
+PROJECT_DIR = '/var/www/SSApp/{{app_version}}/'
+
+#activate_this = os.path.join(PROJECT_DIR,'venv/bin', 'activate_this.py')
+
+#with open(activate_this) as f:
+    #code = compile(f.read(), activate_this, 'exec')
+    #exec(code, dict(__file__=activate_this))
+
+#exec(open(activate_this).read()
+
+
+sys.path.insert(0,PROJECT_DIR)
+
+
+# Shimmy to allow wsgi/apache to pass environment variables in to apache
+# Assumes all of our environment variables begin SS_
+# http://ericplumb.com/blog/passing-apache-environment-variables-to-django-via-mod_wsgi.html
+def application(environ, start_response):
+    # pass the WSGI environment variables on through to os.environ
+    for key in environ:
+        if key.startswith('SS_'):
+            os.environ[key] = environ[key]
+
+    # Required by boto for CloudWatch
+    os.environ['AWS_DEFAULT_REGION'] = environ['AWS_DEFAULT_REGION']
+
+    from manage import app as _application
+    _application.secret_key = { removed }
+
+    return _application(environ, start_response)
+

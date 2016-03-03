@@ -1,0 +1,54 @@
+---
+- name: Re-check that EC2 instances are running
+  local_action:
+    module: ec2
+    image: ami-47a23a30
+    region: "{{ region }}"
+    instance_type: t2.micro 
+    key_name: JB1
+    instance_tags: { Name: AppServer, type: web, env: production}
+    wait: yes
+    exact_count: 2
+    count_tag: { type: web2 }
+    aws_secret_key: '{{ aws_secret_key }}'
+    aws_access_key: '{{ aws_access_key }}'
+  register: ec2
+
+- name: Assign instances to ELB (takes a few minutes)
+  local_action:
+    module: ec2_elb
+    instance_id: "{{ item.id }}"
+    region:      "{{ region }}"
+    ec2_elbs:   "AnsibleELB"
+    state:       'present'
+    aws_secret_key: '{{ aws_secret_key }}'
+    aws_access_key: '{{ aws_access_key }}'
+  with_items: ec2.tagged_instances
+
+- name: Get ELB facts
+  local_action: 
+    module: ec2_elb_facts
+    names: "AnsibleELB"
+    region: "{{ region }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    aws_access_key: "{{ aws_access_key }}"
+  register: elb_facts
+  
+- name: Find the ELB DNS name
+  set_fact: dns={{ item.dns_name }}
+  with_items: elb_facts.elbs
+
+- name: send updated App.conf with ELB ServerName
+  template: src="App.j2" dest="/etc/apache2/sites-available/SSApp.conf" mode=0644
+
+- name: Apache2 enable site
+  command: a2ensite SSApp
+
+- name: Restart Apache2
+  service: name=apache2 
+           state=restarted  
+
+- name: Display the ELB DNS name
+  debug: msg="The Elastic Load Balancer DNS name is {{ dns }}."
+
+ 

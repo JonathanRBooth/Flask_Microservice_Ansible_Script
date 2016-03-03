@@ -1,0 +1,27 @@
+<VirtualHost *:80>
+                ServerName {{server_name}}
+                ServerAdmin { removed }
+                WSGIScriptAlias / "/var/www/SSApp/{{app_version}}/SSApp.wsgi"
+                <Directory /var/www/SSApp/{{app_version}}/>
+                        Order allow,deny
+                        Allow from all
+                </Directory>
+                Alias /static /var/www/SSApp/{{app_version}}/app/static
+                <Directory /var/www/SSApp/{{app_version}}/app/static/>
+                        Order allow,deny
+                        Allow from all
+                </Directory>
+                ErrorLog ${APACHE_LOG_DIR}/error.log
+                LogLevel warn
+                CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+                SetEnv SS_USE_WATCHTOWER_LOGGER True
+                SetEnv SS_USE_FILE_LOGGER True
+                SetEnv SS_FILE_LOGGER_DIR /tmp/
+                SetEnv SS_LOGGING_LEVEL Debug
+                SetEnv SS_STORE_TYPE S3
+                SetEnv SS_FLASK_CONFIG development
+                SetEnv AWS_DEFAULT_REGION eu-west-1
+                SetEnv SS_AUTH_URL https://ultrapos.net/auth/{removed}/{removed}
+                SetEnv SS_SELLERMAP /
+</VirtualHost>

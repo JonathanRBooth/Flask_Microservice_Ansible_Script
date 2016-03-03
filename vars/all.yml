@@ -1,0 +1,11 @@
+---
+region: eu-west-1
+aws_access_key: {Removed}
+aws_secret_key: {Removed}
+key_name: JB1
+
+instance_type: t2.micro
+image: ami-47a23a30
+
+build_s3_filename: {Removed}
+server_name: {Removed}
